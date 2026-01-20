@@ -1,33 +1,167 @@
-// Créer un Pricebook2
-Pricebook2 pb = new Pricebook2(Name='Liste des prix - FRANCE', IsActive=true);
-insert pb;
+// ===============================
+// 1. PRICEBOOK "FRANCE"
+// ===============================
+Pricebook2 pb;
+List<Pricebook2> pbs = [
+    SELECT Id FROM Pricebook2
+    WHERE Name = 'Liste des prix - FRANCE'
+    LIMIT 1
+];
 
-// Créer des produits
-List<Product2> products = new List<Product2>();
-products.add(new Product2(Name='Tesla Model S', ProductCode='TES-MS', Description='Voiture électrique haut de gamme avec une autonomie de 652 km et une accélération de 0 à 100 km/h en 2,5 secondes', Family='Voitures électriques', StockKeepingUnit='TES-MS-2022', QuantityInStock__c=50));
-products.add(new Product2(Name='Ford Mustang Mach-E', ProductCode='FORD-MM', Description='SUV électrique avec une autonomie de 491 km et une accélération de 0 à 100 km/h en 3,7 secondes', Family='Voitures électriques', StockKeepingUnit='FORD-MM-2022', QuantityInStock__c=75));
-products.add(new Product2(Name='Audi e-Tron', ProductCode='AUDI-ET', Description='SUV électrique avec une autonomie de 436 km et une accélération de 0 à 100 km/h en 5,7 secondes', Family='Voitures électriques', StockKeepingUnit='AUDI-ET-2022', QuantityInStock__c=100));
-products.add(new Product2(Name='Toyota Corolla Hybride', ProductCode='TOY-CH', Description='Voiture hybride compacte avec une consommation de carburant de 4,2 L/100 km et une puissance de 122 ch', Family='Voitures hybrides', StockKeepingUnit='TOY-CH-2022', QuantityInStock__c=150));
-products.add(new Product2(Name='Honda Civic', ProductCode='HON-CIV', Description='Voiture compacte avec une consommation de carburant de 6,2 L/100 km et une puissance de 158 ch', Family='Voitures à essence', StockKeepingUnit='HON-CIV-2022', QuantityInStock__c=200));
-insert products;
+if (pbs.isEmpty()) {
+    pb = new Pricebook2(Name='Liste des prix - FRANCE', IsActive=true);
+    insert pb;
+} else {
+    pb = pbs[0];
+}
 
-// Récupérer le Pricebook standard
-Pricebook2 standardPb = [SELECT Id FROM Pricebook2 WHERE IsStandard=true]; // Étape obligatoire pour créer ensuite des pricebookentries dans le pricebook créé
-List<PricebookEntry> pbeList = new List<PricebookEntry>();
-// Créer des PricebookEntries
+// ===============================
+// 2. PRODUITS (clé = SKU)
+// ===============================
+Map<String, Product2> existingProducts = new Map<String, Product2>();
+for (Product2 p : [
+    SELECT Id, StockKeepingUnit
+    FROM Product2
+    WHERE StockKeepingUnit IN (
+        'TES-MS-2022',
+        'FORD-MM-2022',
+        'AUDI-ET-2022',
+        'TOY-CH-2022',
+        'HON-CIV-2022'
+    )
+]) {
+    existingProducts.put(p.StockKeepingUnit, p);
+}
 
-pbeList.add(new PricebookEntry(Pricebook2Id=standardPb.Id, Product2Id=products[0].Id, UnitPrice=25000, IsActive=true));
-pbeList.add(new PricebookEntry(Pricebook2Id=standardPb.Id, Product2Id=products[1].Id, UnitPrice=25000, IsActive=true));
-pbeList.add(new PricebookEntry(Pricebook2Id=standardPb.Id, Product2Id=products[2].Id, UnitPrice=25000, IsActive=true));
-pbeList.add(new PricebookEntry(Pricebook2Id=standardPb.Id, Product2Id=products[3].Id, UnitPrice=25000, IsActive=true));
-pbeList.add(new PricebookEntry(Pricebook2Id=standardPb.Id, Product2Id=products[4].Id, UnitPrice=25000, IsActive=true));
+List<Product2> productsToInsert = new List<Product2>();
 
-// Créer des PricebookEntries
-pbeList.add(new PricebookEntry(Pricebook2Id=pb.Id, Product2Id=products[0].Id, UnitPrice=99990, IsActive=true));
-pbeList.add(new PricebookEntry(Pricebook2Id=pb.Id, Product2Id=products[1].Id, UnitPrice=69900, IsActive=true));
-pbeList.add(new PricebookEntry(Pricebook2Id=pb.Id, Product2Id=products[2].Id, UnitPrice=82400, IsActive=true));
-pbeList.add(new PricebookEntry(Pricebook2Id=pb.Id, Product2Id=products[3].Id, UnitPrice=28990, IsActive=true));
-pbeList.add(new PricebookEntry(Pricebook2Id=pb.Id, Product2Id=products[4].Id, UnitPrice=26990, IsActive=true));
+if (!existingProducts.containsKey('TES-MS-2022')) {
+    productsToInsert.add(new Product2(
+        Name='Tesla Model S',
+        ProductCode='TES-MS',
+        Family='Voitures électriques',
+        Description='Voiture électrique haut de gamme',
+        StockKeepingUnit='TES-MS-2022',
+        QuantityInStock__c=50
+    ));
+}
 
-// Insérer les Pbentries standard & du pricebook "Liste des prix - FRANCE"
-insert pbeList;
+if (!existingProducts.containsKey('FORD-MM-2022')) {
+    productsToInsert.add(new Product2(
+        Name='Ford Mustang Mach-E',
+        ProductCode='FORD-MM',
+        Family='Voitures électriques',
+        Description='SUV électrique',
+        StockKeepingUnit='FORD-MM-2022',
+        QuantityInStock__c=75
+    ));
+}
+
+if (!existingProducts.containsKey('AUDI-ET-2022')) {
+    productsToInsert.add(new Product2(
+        Name='Audi e-Tron',
+        ProductCode='AUDI-ET',
+        Family='Voitures électriques',
+        Description='SUV électrique',
+        StockKeepingUnit='AUDI-ET-2022',
+        QuantityInStock__c=100
+    ));
+}
+
+if (!existingProducts.containsKey('TOY-CH-2022')) {
+    productsToInsert.add(new Product2(
+        Name='Toyota Corolla Hybride',
+        ProductCode='TOY-CH',
+        Family='Voitures hybrides',
+        Description='Voiture hybride',
+        StockKeepingUnit='TOY-CH-2022',
+        QuantityInStock__c=150
+    ));
+}
+
+if (!existingProducts.containsKey('HON-CIV-2022')) {
+    productsToInsert.add(new Product2(
+        Name='Honda Civic',
+        ProductCode='HON-CIV',
+        Family='Voitures à essence',
+        Description='Voiture essence',
+        StockKeepingUnit='HON-CIV-2022',
+        QuantityInStock__c=200
+    ));
+}
+
+if (!productsToInsert.isEmpty()) {
+    insert productsToInsert;
+}
+
+// Recharger tous les produits
+List<Product2> products = [
+    SELECT Id, StockKeepingUnit
+    FROM Product2
+    WHERE StockKeepingUnit IN (
+        'TES-MS-2022',
+        'FORD-MM-2022',
+        'AUDI-ET-2022',
+        'TOY-CH-2022',
+        'HON-CIV-2022'
+    )
+];
+
+// ===============================
+// 3. PRICEBOOK STANDARD
+// ===============================
+Pricebook2 standardPb = [
+    SELECT Id FROM Pricebook2 WHERE IsStandard = true LIMIT 1
+];
+
+// ===============================
+// 4. PRICEBOOK ENTRIES
+// ===============================
+Map<String, Id> productBySku = new Map<String, Id>();
+for (Product2 p : products) {
+    productBySku.put(p.StockKeepingUnit, p.Id);
+}
+
+List<PricebookEntry> entriesToInsert = new List<PricebookEntry>();
+
+for (Product2 p : products) {
+    if ([SELECT COUNT() FROM PricebookEntry
+         WHERE Product2Id = :p.Id AND Pricebook2Id = :standardPb.Id] == 0) {
+
+        entriesToInsert.add(new PricebookEntry(
+            Pricebook2Id = standardPb.Id,
+            Product2Id   = p.Id,
+            UnitPrice    = 25000,
+            IsActive     = true
+        ));
+    }
+}
+
+// FRANCE pricebook
+Map<String, Decimal> prices = new Map<String, Decimal>{
+    'TES-MS-2022' => 99990,
+    'FORD-MM-2022' => 69900,
+    'AUDI-ET-2022' => 82400,
+    'TOY-CH-2022' => 28990,
+    'HON-CIV-2022' => 26990
+};
+
+for (String sku : prices.keySet()) {
+    if ([SELECT COUNT() FROM PricebookEntry
+         WHERE Product2Id = :productBySku.get(sku)
+         AND Pricebook2Id = :pb.Id] == 0) {
+
+        entriesToInsert.add(new PricebookEntry(
+            Pricebook2Id = pb.Id,
+            Product2Id   = productBySku.get(sku),
+            UnitPrice    = prices.get(sku),
+            IsActive     = true
+        ));
+    }
+}
+
+if (!entriesToInsert.isEmpty()) {
+    insert entriesToInsert;
+}
+
+System.debug('✔ Script exécuté avec succès (idempotent)');
