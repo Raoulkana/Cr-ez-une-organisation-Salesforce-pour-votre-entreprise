@@ -1,0 +1,38 @@
+<template>
+    <!-- Utilisateur autorisé -->
+    <template if:true={showContent}>
+        <lightning-card title="Produits de l'opportunité">
+
+            <!-- Produits existants -->
+            <template if:true={hasData}>
+                <lightning-datatable
+                    key-field="id"
+                    data={data}
+                    columns={columns}
+                    hide-checkbox-column>
+                </lightning-datatable>
+            </template>
+
+            <!-- Aucun produit -->
+            <template if:false={hasData}>
+                <div class="slds-p-around_medium slds-text-color_weak">
+                    <p><strong>Aucun produit n’est associé à cette opportunité.</strong></p>
+                    <p>
+                        Veuillez sélectionner un catalogue (Pricebook),  
+                        puis ajouter des produits.
+                    </p>
+                </div>
+            </template>
+
+        </lightning-card>
+    </template>
+
+    <!-- Utilisateur non autorisé -->
+    <template if:false={showContent}>
+        <lightning-card title="Produits de l'opportunité">
+            <div class="slds-p-around_medium">
+                <p>Vous n’êtes pas autorisé à voir ce contenu.</p>
+            </div>
+        </lightning-card>
+    </template>
+</template>
