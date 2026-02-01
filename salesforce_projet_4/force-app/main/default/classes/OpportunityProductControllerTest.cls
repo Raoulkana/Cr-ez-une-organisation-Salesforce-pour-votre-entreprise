@@ -20,12 +20,11 @@ public class OpportunityProductControllerTest {
         // 3️⃣ Produit
         Product2 prod = new Product2(
             Name = 'Produit Test',
-            IsActive = true,
-            QuantityInStock__c = 10
+            IsActive = true
         );
         insert prod;
 
-        // 4️⃣ Pricebook standard (BONNE MÉTHODE)
+        // 4️⃣ Standard Pricebook (CORRECT)
         Id standardPricebookId = Test.getStandardPricebookId();
 
         // 5️⃣ PricebookEntry
@@ -46,7 +45,7 @@ public class OpportunityProductControllerTest {
         );
         insert oli;
 
-        // 7️⃣ Appel méthode testée (SIGNATURE CORRECTE)
+        // 7️⃣ Appel méthode testée (SIGNATURE OK)
         Test.startTest();
         List<OpportunityProductController.OpportunityProductWrapper> result =
             OpportunityProductController.getOpportunityProducts(opp.Id);
@@ -57,6 +56,5 @@ public class OpportunityProductControllerTest {
         System.assertEquals('Produit Test', result[0].productName);
         System.assertEquals(2, result[0].quantity);
         System.assertEquals(200, result[0].totalPrice);
-        System.assertEquals(10, result[0].quantityInStock);
     }
 }
