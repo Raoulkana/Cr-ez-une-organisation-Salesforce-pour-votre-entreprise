@@ -8,20 +8,16 @@ public class OpportunityProductControllerTest {
         Account acc = new Account(Name = 'Client Test');
         insert acc;
 
-        // 2️⃣ Pricebook personnalisé
-        Pricebook2 pb = new Pricebook2(
-            Name = 'Pricebook Test',
-            IsActive = true
-        );
-        insert pb;
+        // 2️⃣ Récupération du Standard Pricebook (OBLIGATOIRE EN TEST)
+        Id standardPricebookId = Test.getStandardPricebookId();
 
-        // 3️⃣ Opportunité (AVEC Pricebook2Id)
+        // 3️⃣ Opportunité AVEC Pricebook
         Opportunity opp = new Opportunity(
             Name = 'Opportunity Test',
             StageName = 'Prospecting',
             CloseDate = Date.today().addDays(30),
             AccountId = acc.Id,
-            Pricebook2Id = pb.Id
+            Pricebook2Id = standardPricebookId
         );
         insert opp;
 
@@ -33,9 +29,9 @@ public class OpportunityProductControllerTest {
         );
         insert prod;
 
-        // 5️⃣ PricebookEntry
+        // 5️⃣ PricebookEntry (lié AU STANDARD PRICEBOOK)
         PricebookEntry pbe = new PricebookEntry(
-            Pricebook2Id = pb.Id,
+            Pricebook2Id = standardPricebookId,
             Product2Id = prod.Id,
             UnitPrice = 100,
             IsActive = true
@@ -58,7 +54,7 @@ public class OpportunityProductControllerTest {
         Test.stopTest();
 
         // 8️⃣ Assertions
-        System.assertEquals(1, result.size(), 'Une seule ligne attendue');
+        System.assertEquals(1, result.size());
         System.assertEquals('Produit Test', result[0].productName);
         System.assertEquals(2, result[0].quantity);
         System.assertEquals(100, result[0].unitPrice);
