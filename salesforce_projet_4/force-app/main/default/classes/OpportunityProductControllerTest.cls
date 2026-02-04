@@ -8,31 +8,37 @@ public class OpportunityProductControllerTest {
         Account acc = new Account(Name = 'Client Test');
         insert acc;
 
-        // 2️⃣ Opportunité
+        // 2️⃣ Pricebook personnalisé
+        Pricebook2 pb = new Pricebook2(
+            Name = 'Pricebook Test',
+            IsActive = true
+        );
+        insert pb;
+
+        // 3️⃣ Opportunité (AVEC Pricebook2Id)
         Opportunity opp = new Opportunity(
             Name = 'Opportunity Test',
             StageName = 'Prospecting',
             CloseDate = Date.today().addDays(30),
-            AccountId = acc.Id
+            AccountId = acc.Id,
+            Pricebook2Id = pb.Id
         );
         insert opp;
 
-        // 3️⃣ Produit
+        // 4️⃣ Produit
         Product2 prod = new Product2(
             Name = 'Produit Test',
-            IsActive = true
+            IsActive = true,
+            QuantityInStock__c = 10
         );
         insert prod;
 
-        // 4️⃣ Standard Pricebook (CORRECT)
-        Id standardPricebookId = Test.getStandardPricebookId();
-
         // 5️⃣ PricebookEntry
         PricebookEntry pbe = new PricebookEntry(
-            Pricebook2Id = standardPricebookId,
-            Product2Id   = prod.Id,
-            UnitPrice    = 100,
-            IsActive     = true
+            Pricebook2Id = pb.Id,
+            Product2Id = prod.Id,
+            UnitPrice = 100,
+            IsActive = true
         );
         insert pbe;
 
@@ -45,16 +51,18 @@ public class OpportunityProductControllerTest {
         );
         insert oli;
 
-        // 7️⃣ Appel méthode testée (SIGNATURE OK)
+        // 7️⃣ Appel méthode testée
         Test.startTest();
         List<OpportunityProductController.OpportunityProductWrapper> result =
             OpportunityProductController.getOpportunityProducts(opp.Id);
         Test.stopTest();
 
         // 8️⃣ Assertions
-        System.assertEquals(1, result.size());
+        System.assertEquals(1, result.size(), 'Une seule ligne attendue');
         System.assertEquals('Produit Test', result[0].productName);
         System.assertEquals(2, result[0].quantity);
+        System.assertEquals(100, result[0].unitPrice);
         System.assertEquals(200, result[0].totalPrice);
+        System.assertEquals(10, result[0].quantityInStock);
     }
 }

@@ -4,7 +4,6 @@ public with sharing class OpportunityProductController {
      * Wrapper utilisé pour l'affichage dans la DataTable LWC
      */
     public class OpportunityProductWrapper {
-
         @AuraEnabled public Id id;
         @AuraEnabled public String productName;
         @AuraEnabled public Decimal quantity;
@@ -38,7 +37,6 @@ public with sharing class OpportunityProductController {
         ];
 
         for (OpportunityLineItem oli : oliList) {
-
             OpportunityProductWrapper wrap = new OpportunityProductWrapper();
             wrap.id = oli.Id;
             wrap.productName = oli.PricebookEntry.Product2.Name;
@@ -46,7 +44,6 @@ public with sharing class OpportunityProductController {
             wrap.unitPrice = oli.UnitPrice;
             wrap.totalPrice = oli.TotalPrice;
             wrap.quantityInStock = oli.PricebookEntry.Product2.QuantityInStock__c;
-
             results.add(wrap);
         }
 
