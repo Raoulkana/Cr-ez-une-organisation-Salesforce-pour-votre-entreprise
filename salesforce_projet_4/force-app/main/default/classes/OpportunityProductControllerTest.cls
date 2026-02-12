@@ -4,30 +4,22 @@ public class OpportunityProductControllerTest {
     @IsTest
     static void testGetOpportunityProducts() {
 
+        // 1️⃣ Account
         Account acc = new Account(Name = 'Client Test');
         insert acc;
 
-        // Récupération et activation du Standard Pricebook
+        // 2️⃣ Récupération du Standard Pricebook
         Id standardPricebookId = Test.getStandardPricebookId();
 
-        Pricebook2 pb = new Pricebook2(
-            Id = standardPricebookId,
-            IsActive = true
-        );
-        update pb;
+        Pricebook2 standardPb = [
+            SELECT Id, IsActive
+            FROM Pricebook2
+            WHERE Id = :standardPricebookId
+        ];
+        standardPb.IsActive = true;
+        update standardPb;
 
-        Opportunity opp = new Opportunity(
-            Name = 'Opportunity Test',
-            StageName = 'Prospecting',
-            CloseDate = Date.today().addDays(30),
-            AccountId = acc.Id
-        );
-        insert opp;
-
-        // 🔥 Important : associer le Pricebook APRÈS insertion
-        opp.Pricebook2Id = standardPricebookId;
-        update opp;
-
+        // 3️⃣ Product
         Product2 prod = new Product2(
             Name = 'Produit Test',
             IsActive = true,
@@ -35,30 +27,49 @@ public class OpportunityProductControllerTest {
         );
         insert prod;
 
-        PricebookEntry pbe = new PricebookEntry(
+        // 4️⃣ OBLIGATOIRE : créer d’abord une entrée standard
+        PricebookEntry standardEntry = new PricebookEntry(
             Pricebook2Id = standardPricebookId,
             Product2Id = prod.Id,
             UnitPrice = 100,
-            IsActive = true
+            IsActive = true,
+            UseStandardPrice = false
         );
-        insert pbe;
+        insert standardEntry;
 
+        // 5️⃣ Opportunity
+        Opportunity opp = new Opportunity(
+            Name = 'Opportunity Test',
+            StageName = 'Prospecting',
+            CloseDate = Date.today().addDays(30),
+            AccountId = acc.Id,
+            Pricebook2Id = standardPricebookId
+        );
+        insert opp;
+
+        // 6️⃣ OpportunityLineItem
         OpportunityLineItem oli = new OpportunityLineItem(
             OpportunityId = opp.Id,
-            PricebookEntryId = pbe.Id,
-            Quantity = 2
+            PricebookEntryId = standardEntry.Id,
+            Quantity = 2,
+            UnitPrice = 100
         );
         insert oli;
 
+        // 7️⃣ Test controller
         Test.startTest();
         List<OpportunityProductController.OpportunityProductWrapper> result =
             OpportunityProductController.getOpportunityProducts(opp.Id);
         Test.stopTest();
 
+        // 8️⃣ Assertions
         System.assertEquals(1, result.size());
-        System.assertEquals('Produit Test', result[0].productName);
-        System.assertEquals(2, result[0].quantity);
-        System.assertEquals(200, result[0].totalPrice);
-        System.assertEquals(10, result[0].quantityInStock);
+        OpportunityProductController.OpportunityProductWrapper wrap = result[0];
+
+        System.assertEquals('Produit Test', wrap.productName);
+        System.assertEquals(2, wrap.quantity);
+        System.assertEquals(100, wrap.unitPrice);
+        System.assertEquals(200, wrap.totalPrice);
+        System.assertEquals(10, wrap.quantityInStock);
     }
 }
