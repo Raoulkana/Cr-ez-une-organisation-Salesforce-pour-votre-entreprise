@@ -8,8 +8,15 @@ public class OpportunityProductControllerTest {
         Account acc = new Account(Name = 'Client Test');
         insert acc;
 
-        // 2️⃣ Récupération du Standard Pricebook (OBLIGATOIRE EN TEST)
+        // 2️⃣ Récupération du Standard Pricebook
         Id standardPricebookId = Test.getStandardPricebookId();
+
+        // 🔥 Activation obligatoire du Standard Pricebook
+        Pricebook2 standardPb = new Pricebook2(
+            Id = standardPricebookId,
+            IsActive = true
+        );
+        update standardPb;
 
         // 3️⃣ Opportunité AVEC Pricebook
         Opportunity opp = new Opportunity(
@@ -29,7 +36,7 @@ public class OpportunityProductControllerTest {
         );
         insert prod;
 
-        // 5️⃣ PricebookEntry (lié AU STANDARD PRICEBOOK)
+        // 5️⃣ PricebookEntry
         PricebookEntry pbe = new PricebookEntry(
             Pricebook2Id = standardPricebookId,
             Product2Id = prod.Id,
