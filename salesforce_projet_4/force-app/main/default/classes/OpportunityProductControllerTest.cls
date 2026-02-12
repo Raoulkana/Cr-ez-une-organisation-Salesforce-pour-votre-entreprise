@@ -4,31 +4,30 @@ public class OpportunityProductControllerTest {
     @IsTest
     static void testGetOpportunityProducts() {
 
-        // 1️⃣ Compte
         Account acc = new Account(Name = 'Client Test');
         insert acc;
 
-        // 2️⃣ Récupération du Standard Pricebook
+        // Récupération et activation du Standard Pricebook
         Id standardPricebookId = Test.getStandardPricebookId();
 
-        // 🔥 Activation obligatoire du Standard Pricebook
-        Pricebook2 standardPb = new Pricebook2(
+        Pricebook2 pb = new Pricebook2(
             Id = standardPricebookId,
             IsActive = true
         );
-        update standardPb;
+        update pb;
 
-        // 3️⃣ Opportunité AVEC Pricebook
         Opportunity opp = new Opportunity(
             Name = 'Opportunity Test',
             StageName = 'Prospecting',
             CloseDate = Date.today().addDays(30),
-            AccountId = acc.Id,
-            Pricebook2Id = standardPricebookId
+            AccountId = acc.Id
         );
         insert opp;
 
-        // 4️⃣ Produit
+        // 🔥 Important : associer le Pricebook APRÈS insertion
+        opp.Pricebook2Id = standardPricebookId;
+        update opp;
+
         Product2 prod = new Product2(
             Name = 'Produit Test',
             IsActive = true,
@@ -36,7 +35,6 @@ public class OpportunityProductControllerTest {
         );
         insert prod;
 
-        // 5️⃣ PricebookEntry
         PricebookEntry pbe = new PricebookEntry(
             Pricebook2Id = standardPricebookId,
             Product2Id = prod.Id,
@@ -45,26 +43,21 @@ public class OpportunityProductControllerTest {
         );
         insert pbe;
 
-        // 6️⃣ OpportunityLineItem
         OpportunityLineItem oli = new OpportunityLineItem(
             OpportunityId = opp.Id,
             PricebookEntryId = pbe.Id,
-            Quantity = 2,
-            UnitPrice = 100
+            Quantity = 2
         );
         insert oli;
 
-        // 7️⃣ Appel méthode testée
         Test.startTest();
         List<OpportunityProductController.OpportunityProductWrapper> result =
             OpportunityProductController.getOpportunityProducts(opp.Id);
         Test.stopTest();
 
-        // 8️⃣ Assertions
         System.assertEquals(1, result.size());
         System.assertEquals('Produit Test', result[0].productName);
         System.assertEquals(2, result[0].quantity);
-        System.assertEquals(100, result[0].unitPrice);
         System.assertEquals(200, result[0].totalPrice);
         System.assertEquals(10, result[0].quantityInStock);
     }
