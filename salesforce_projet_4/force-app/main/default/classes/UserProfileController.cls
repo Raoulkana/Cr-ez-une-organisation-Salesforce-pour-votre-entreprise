@@ -7,25 +7,28 @@ public with sharing class UserProfileController {
     @AuraEnabled(cacheable=true)
     public static Boolean isAdminOrCommercial() {
 
-        // Récupération du profil de l'utilisateur courant
-        Profile p = [
+        Id profileId = UserInfo.getProfileId();
+
+        // Vérifie l'accessibilité du profil
+        if(!Schema.sObjectType.Profile.isAccessible()){
+            throw new AuraHandledException('Accès au profil non autorisé.');
+        }
+
+        // Récupération du nom du profil
+        List<Profile> profiles = [
             SELECT Name
             FROM Profile
-            WHERE Id = :UserInfo.getProfileId()
+            WHERE Id = :profileId
             LIMIT 1
         ];
 
-        // Normalisation du nom du profil
-        String profileName = p.Name.toLowerCase();
-
-        // Vérification des profils autorisés
-        if (
-            profileName.contains('system administrator') ||
-            profileName.contains('commercial')
-        ) {
-            return true;
+        if(profiles.isEmpty()){
+            throw new AuraHandledException('Profil introuvable.');
         }
 
-        return false;
+        String profileName = profiles[0].Name.toLowerCase();
+
+        // Vérification des profils autorisés
+        return profileName.contains('system administrator') || profileName.contains('commercial');
     }
 }

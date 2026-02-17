@@ -1,17 +1,18 @@
 @IsTest
 public class OpportunityProductControllerTest {
 
-    @IsTest
-    static void testGetOpportunityProducts() {
+    /*
+     * ==========================================
+     * MÉTHODE UTILITAIRE - Création des données
+     * ==========================================
+     */
+    private static OpportunityLineItem createTestData() {
 
-        // 1️⃣ Compte
         Account acc = new Account(Name = 'Client Test');
         insert acc;
 
-        // 2️⃣ Récupération du Standard Pricebook
         Id standardPricebookId = Test.getStandardPricebookId();
 
-        // 3️⃣ Opportunité avec Pricebook
         Opportunity opp = new Opportunity(
             Name = 'Opportunity Test',
             StageName = 'Prospecting',
@@ -21,7 +22,6 @@ public class OpportunityProductControllerTest {
         );
         insert opp;
 
-        // 4️⃣ Produit
         Product2 prod = new Product2(
             Name = 'Produit Test',
             IsActive = true,
@@ -29,7 +29,6 @@ public class OpportunityProductControllerTest {
         );
         insert prod;
 
-        // 5️⃣ PricebookEntry
         PricebookEntry pbe = new PricebookEntry(
             Pricebook2Id = standardPricebookId,
             Product2Id = prod.Id,
@@ -38,7 +37,6 @@ public class OpportunityProductControllerTest {
         );
         insert pbe;
 
-        // 6️⃣ OpportunityLineItem
         OpportunityLineItem oli = new OpportunityLineItem(
             OpportunityId = opp.Id,
             PricebookEntryId = pbe.Id,
@@ -47,16 +45,110 @@ public class OpportunityProductControllerTest {
         );
         insert oli;
 
-        // 7️⃣ Appel méthode
+        return oli;
+    }
+
+    /*
+     * ==========================================
+     * TEST READ
+     * ==========================================
+     */
+    @IsTest
+    static void testGetOpportunityProducts() {
+
+        OpportunityLineItem oli = createTestData();
+
         Test.startTest();
-        List<OpportunityProductController.OpportunityProductWrapper> result =
-            OpportunityProductController.getOpportunityProducts(opp.Id);
+        List<OpportunityProductController.OpportunityLineWrapper> result =
+            OpportunityProductController.getOpportunityProducts(oli.OpportunityId);
         Test.stopTest();
 
-        // 8️⃣ Vérifications
         System.assertEquals(1, result.size());
         System.assertEquals('Produit Test', result[0].productName);
         System.assertEquals(2, result[0].quantity);
         System.assertEquals(200, result[0].totalPrice);
+    }
+
+    /*
+     * ==========================================
+     * TEST CREATE
+     * ==========================================
+     */
+    @IsTest
+    static void testCreateOpportunityProduct() {
+
+        OpportunityLineItem existing = createTestData();
+
+        Test.startTest();
+        Id newLineId = OpportunityProductController.createOpportunityProduct(
+            existing.OpportunityId,
+            existing.PricebookEntryId,
+            3
+        );
+        Test.stopTest();
+
+        OpportunityLineItem newLine =
+            [SELECT Quantity FROM OpportunityLineItem WHERE Id = :newLineId];
+
+        System.assertEquals(3, newLine.Quantity);
+    }
+
+    /*
+     * ==========================================
+     * TEST UPDATE
+     * ==========================================
+     */
+    @IsTest
+    static void testUpdateQuantity() {
+
+        OpportunityLineItem oli = createTestData();
+
+        Test.startTest();
+        OpportunityProductController.updateQuantity(oli.Id, 5);
+        Test.stopTest();
+
+        OpportunityLineItem updated =
+            [SELECT Quantity FROM OpportunityLineItem WHERE Id = :oli.Id];
+
+        System.assertEquals(5, updated.Quantity);
+    }
+
+    /*
+     * ==========================================
+     * TEST DELETE
+     * ==========================================
+     */
+    @IsTest
+    static void testDeleteOpportunityProduct() {
+
+        OpportunityLineItem oli = createTestData();
+
+        Test.startTest();
+        OpportunityProductController.deleteOpportunityProduct(oli.Id);
+        Test.stopTest();
+
+        Integer countLines = [
+            SELECT COUNT()
+            FROM OpportunityLineItem
+            WHERE Id = :oli.Id
+        ];
+
+        System.assertEquals(0, countLines);
+    }
+
+    /*
+     * ==========================================
+     * TEST ERREUR - Id null
+     * ==========================================
+     */
+    @IsTest
+    static void testGetOpportunityProductsWithNullId() {
+
+        try {
+            OpportunityProductController.getOpportunityProducts(null);
+            System.assert(false, 'Exception should have been thrown');
+        } catch (AuraHandledException e) {
+            System.assertEquals('Opportunity Id is required', e.getMessage());
+        }
     }
 }
