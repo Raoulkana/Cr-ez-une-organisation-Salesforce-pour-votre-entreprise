@@ -21,6 +21,7 @@ public with sharing class OpportunityProductController {
                    Quantity,
                    UnitPrice,
                    TotalPrice,
+                   PricebookEntryId,
                    PricebookEntry.Product2.Id,
                    PricebookEntry.Product2.Name
             FROM OpportunityLineItem
@@ -52,14 +53,18 @@ public with sharing class OpportunityProductController {
             throw new AuraHandledException('Delete not allowed.');
         }
 
-        List<OpportunityLineItem> records =
-            [SELECT Id FROM OpportunityLineItem WHERE Id = :lineId LIMIT 1];
+        OpportunityLineItem oli = [
+            SELECT Id
+            FROM OpportunityLineItem
+            WHERE Id = :lineId
+            LIMIT 1
+        ];
 
-        if(records.isEmpty()){
+        if(oli == null){
             throw new AuraHandledException('Line not found.');
         }
 
-        delete records[0];
+        delete oli;
     }
 
     /*
@@ -86,13 +91,17 @@ public with sharing class OpportunityProductController {
             throw new AuraHandledException('Create not allowed.');
         }
 
-        // Récupération du prix depuis le PricebookEntry (évite hard-coded)
+        // Vérifier PricebookEntry actif
         PricebookEntry pbe = [
-            SELECT Id, UnitPrice
+            SELECT Id, UnitPrice, IsActive
             FROM PricebookEntry
             WHERE Id = :pricebookEntryId
             LIMIT 1
         ];
+
+        if(!pbe.IsActive){
+            throw new AuraHandledException('Pricebook entry is not active.');
+        }
 
         OpportunityLineItem oli = new OpportunityLineItem(
             OpportunityId = opportunityId,
@@ -125,16 +134,18 @@ public with sharing class OpportunityProductController {
             throw new AuraHandledException('Update not allowed.');
         }
 
-        List<OpportunityLineItem> records =
-            [SELECT Id, Quantity FROM OpportunityLineItem WHERE Id = :lineId LIMIT 1];
+        OpportunityLineItem oli = [
+            SELECT Id, Quantity
+            FROM OpportunityLineItem
+            WHERE Id = :lineId
+            LIMIT 1
+        ];
 
-        if(records.isEmpty()){
+        if(oli == null){
             throw new AuraHandledException('Line not found.');
         }
 
-        OpportunityLineItem oli = records[0];
         oli.Quantity = quantity;
-
         update oli;
     }
 
@@ -147,14 +158,24 @@ public with sharing class OpportunityProductController {
 
         @AuraEnabled public Id id;
         @AuraEnabled public String productName;
+        @AuraEnabled public Id productId;
         @AuraEnabled public Decimal quantity;
+        @AuraEnabled public Decimal unitPrice;
         @AuraEnabled public Decimal totalPrice;
 
         public OpportunityLineWrapper(OpportunityLineItem oli){
+
             this.id = oli.Id;
-            this.productName = oli.PricebookEntry.Product2.Name;
             this.quantity = oli.Quantity;
+            this.unitPrice = oli.UnitPrice;
             this.totalPrice = oli.TotalPrice;
+
+            if(oli.PricebookEntry != null &&
+               oli.PricebookEntry.Product2 != null){
+
+                this.productName = oli.PricebookEntry.Product2.Name;
+                this.productId = oli.PricebookEntry.Product2.Id;
+            }
         }
     }
 }

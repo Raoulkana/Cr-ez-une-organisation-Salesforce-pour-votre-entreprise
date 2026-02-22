@@ -14,6 +14,7 @@ import OL_Not_Authorized from '@salesforce/label/c.OL_Not_Authorized';
 export default class OpportunityProductDatatable extends NavigationMixin(LightningElement) {
 
     @api recordId;
+
     @track data = [];
     @track showContent = false;
     @track hasData = false;
@@ -33,6 +34,10 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
         this.initializeComponent();
     }
 
+    /* ===============================
+       INITIALISATION
+    =============================== */
+
     async initializeComponent() {
         try {
             const result = await isAdminOrCommercial();
@@ -42,13 +47,14 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
                 this.initializeColumns();
                 this.loadProducts();
             }
+
         } catch (error) {
-            console.error('Erreur profil', error);
+            console.error('Erreur vérification profil : ', error);
+            this.showContent = false;
         }
     }
 
     initializeColumns() {
-
         this.columns = [
             { label: 'Produit', fieldName: 'productName' },
             { label: 'Prix unitaire', fieldName: 'unitPrice', type: 'currency' },
@@ -80,6 +86,10 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
         ];
     }
 
+    /* ===============================
+       CHARGEMENT PRODUITS
+    =============================== */
+
     loadProducts() {
         getOpportunityProducts({ opportunityId: this.recordId })
             .then(result => {
@@ -87,7 +97,8 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
                 this.data = result.map(item => {
                     return {
                         ...item,
-                        productName: item.PricebookEntry.Product2.Name
+                        productName: item.PricebookEntry?.Product2?.Name,
+                        productId: item.PricebookEntry?.Product2?.Id
                     };
                 });
 
@@ -96,15 +107,28 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
 
             })
             .catch(error => {
-                console.error('Erreur chargement produits', error);
+                console.error('Erreur chargement produits : ', error);
+                this.data = [];
+                this.hasData = false;
             });
     }
 
+    /* ===============================
+       VALIDATION QUANTITÉ
+    =============================== */
+
     checkQuantityErrors() {
-        this.hasQuantityError = this.data.some(item => item.quantity <= 0);
+        this.hasQuantityError = this.data.some(
+            item => item.quantity <= 0
+        );
     }
 
+    /* ===============================
+       ACTIONS DATATABLE
+    =============================== */
+
     handleRowAction(event) {
+
         const actionName = event.detail.action.name;
         const row = event.detail.row;
 
@@ -113,25 +137,38 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
         }
 
         if (actionName === 'view_product') {
-            this.navigateToProduct(row.PricebookEntry.Product2.Id);
+            this.navigateToProduct(row.productId);
         }
     }
 
+    /* ===============================
+       SUPPRESSION
+    =============================== */
+
     deleteProduct(productId) {
-        deleteOpportunityProduct({ productId })
+
+        deleteOpportunityProduct({ productId: productId })
             .then(() => {
                 this.loadProducts();
             })
             .catch(error => {
-                console.error('Erreur suppression', error);
+                console.error('Erreur suppression : ', error);
             });
     }
 
+    /* ===============================
+       NAVIGATION
+    =============================== */
+
     navigateToProduct(productId) {
+
+        if (!productId) return;
+
         this[NavigationMixin.Navigate]({
             type: 'standard__recordPage',
             attributes: {
                 recordId: productId,
+                objectApiName: 'Product2',
                 actionName: 'view'
             }
         });
