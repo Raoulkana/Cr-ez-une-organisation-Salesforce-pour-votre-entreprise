@@ -1,38 +1,48 @@
 <template>
+
     <!-- Utilisateur autorisé -->
     <template if:true={showContent}>
-        <lightning-card title="Produits de l'opportunité">
+
+        <lightning-card title={labels.OL_Title}>
+
+            <!-- Encadré erreur quantité -->
+            <template if:true={hasQuantityError}>
+                <div class="error-box">
+                    <p class="error-title">{labels.OL_Error_Title}</p>
+                    <p>{labels.OL_Quantity_Error}</p>
+                </div>
+            </template>
 
             <!-- Produits existants -->
             <template if:true={hasData}>
                 <lightning-datatable
-                    key-field="id"
+                    key-field="Id"
                     data={data}
                     columns={columns}
-                    hide-checkbox-column>
+                    hide-checkbox-column
+                    onrowaction={handleRowAction}>
                 </lightning-datatable>
             </template>
 
             <!-- Aucun produit -->
             <template if:false={hasData}>
-                <div class="slds-p-around_medium slds-text-color_weak">
-                    <p><strong>Aucun produit n’est associé à cette opportunité.</strong></p>
-                    <p>
-                        Veuillez sélectionner un catalogue (Pricebook),  
-                        puis ajouter des produits.
-                    </p>
+                <div class="no-products">
+                    <p><strong>{labels.OL_No_Products}</strong></p>
+                    <p>{labels.OL_Select_Pricebook}</p>
                 </div>
             </template>
 
         </lightning-card>
+
     </template>
 
     <!-- Utilisateur non autorisé -->
     <template if:false={showContent}>
-        <lightning-card title="Produits de l'opportunité">
+        <lightning-card title={labels.OL_Title}>
             <div class="slds-p-around_medium">
-                <p>Vous n’êtes pas autorisé à voir ce contenu.</p>
+                <p>{labels.OL_Not_Authorized}</p>
             </div>
         </lightning-card>
     </template>
+
 </template>

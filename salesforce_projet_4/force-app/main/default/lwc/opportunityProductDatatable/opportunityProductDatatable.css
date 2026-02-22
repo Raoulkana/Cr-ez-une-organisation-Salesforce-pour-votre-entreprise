@@ -1,0 +1,17 @@
+.error-box {
+    background-color: #ffe0b2;
+    border-left: 6px solid red;
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+.error-title {
+    font-weight: bold;
+    color: red;
+}
+
+.no-products {
+    background-color: #f4f6f9;
+    padding: 12px;
+    text-align: center;
+}

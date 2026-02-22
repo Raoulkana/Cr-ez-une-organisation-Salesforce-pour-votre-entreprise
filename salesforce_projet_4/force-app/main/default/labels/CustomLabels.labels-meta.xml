@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+
+    <labels>
+        <fullName>OL_Title</fullName>
+        <language>fr</language>
+        <protected>false</protected>
+        <value>Produits de l'opportunité</value>
+    </labels>
+
+    <labels>
+        <fullName>OL_No_Products</fullName>
+        <language>fr</language>
+        <protected>false</protected>
+        <value>Aucun produit n’est associé à cette opportunité.</value>
+    </labels>
+
+    <labels>
+        <fullName>OL_Select_Pricebook</fullName>
+        <language>fr</language>
+        <protected>false</protected>
+        <value>Veuillez sélectionner un catalogue puis ajouter des produits.</value>
+    </labels>
+
+    <labels>
+        <fullName>OL_Quantity_Error</fullName>
+        <language>fr</language>
+        <protected>false</protected>
+        <value>Une ou plusieurs lignes ont une quantité invalide.</value>
+    </labels>
+
+    <labels>
+        <fullName>OL_Error_Title</fullName>
+        <language>fr</language>
+        <protected>false</protected>
+        <value>Erreur</value>
+    </labels>
+
+    <labels>
+        <fullName>OL_Not_Authorized</fullName>
+        <language>fr</language>
+        <protected>false</protected>
+        <value>Vous n’êtes pas autorisé à voir ce contenu.</value>
+    </labels>
+
+</CustomLabels>
