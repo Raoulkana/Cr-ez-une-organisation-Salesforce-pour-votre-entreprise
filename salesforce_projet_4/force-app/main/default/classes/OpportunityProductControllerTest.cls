@@ -24,8 +24,7 @@ public class OpportunityProductControllerTest {
 
         Product2 prod = new Product2(
             Name = 'Produit Test',
-            IsActive = true,
-            QuantityInStock__c = 10
+            IsActive = true
         );
         insert prod;
 
@@ -66,7 +65,9 @@ public class OpportunityProductControllerTest {
         System.assertEquals(1, result.size());
         System.assertEquals('Produit Test', result[0].productName);
         System.assertEquals(2, result[0].quantity);
+        System.assertEquals(100, result[0].unitPrice);
         System.assertEquals(200, result[0].totalPrice);
+        System.assertNotEquals(null, result[0].productId);
     }
 
     /*
@@ -149,6 +150,24 @@ public class OpportunityProductControllerTest {
             System.assert(false, 'Exception should have been thrown');
         } catch (AuraHandledException e) {
             System.assertEquals('Opportunity Id is required', e.getMessage());
+        }
+    }
+
+    /*
+     * ==========================================
+     * TEST ERREUR - Quantité invalide
+     * ==========================================
+     */
+    @IsTest
+    static void testUpdateWithInvalidQuantity() {
+
+        OpportunityLineItem oli = createTestData();
+
+        try {
+            OpportunityProductController.updateQuantity(oli.Id, 0);
+            System.assert(false, 'Exception should have been thrown');
+        } catch (AuraHandledException e) {
+            System.assertEquals('Quantity must be greater than 0.', e.getMessage());
         }
     }
 }

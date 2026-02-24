@@ -15,43 +15,83 @@ public with sharing class OpportunityStockService {
             }
         }
 
+        if(pbeIds.isEmpty()){
+            return;
+        }
+
         // 2️⃣ Récupérer les PricebookEntry
         Map<Id, PricebookEntry> pbeMap = new Map<Id, PricebookEntry>(
-            [SELECT Id, Product2Id 
-             FROM PricebookEntry 
+            [SELECT Id, Product2Id
+             FROM PricebookEntry
              WHERE Id IN :pbeIds]
         );
 
         // 3️⃣ Récupérer les Product2
         Set<Id> productIds = new Set<Id>();
+
         for(PricebookEntry pbe : pbeMap.values()){
-            productIds.add(pbe.Product2Id);
+            if(pbe.Product2Id != null){
+                productIds.add(pbe.Product2Id);
+            }
+        }
+
+        if(productIds.isEmpty()){
+            return;
         }
 
         Map<Id, Product2> productMap = new Map<Id, Product2>(
-            [SELECT Id, Stock__c 
-             FROM Product2 
-             WHERE Id IN :productIds]
+            [SELECT Id, Stock__c
+             FROM Product2
+             WHERE Id IN :productIds
+             FOR UPDATE]
         );
 
-        // 4️⃣ Vérifier et décrémenter
+        // 4️⃣ Calculer les quantités totales par produit (bulk safe)
+        Map<Id, Decimal> quantityPerProduct = new Map<Id, Decimal>();
+
         for(OpportunityLineItem oli : lineItems){
 
             PricebookEntry pbe = pbeMap.get(oli.PricebookEntryId);
-            Product2 prod = productMap.get(pbe.Product2Id);
+            if(pbe == null) continue;
 
-            if(prod.Stock__c == null){
-                prod.Stock__c = 0;
-            }
+            Id productId = pbe.Product2Id;
+            if(productId == null) continue;
 
-            if(prod.Stock__c < oli.Quantity){
-                oli.addError('Stock insuffisant pour ce produit.');
+            Decimal qty = oli.Quantity == null ? 0 : oli.Quantity;
+
+            if(quantityPerProduct.containsKey(productId)){
+                quantityPerProduct.put(productId,
+                    quantityPerProduct.get(productId) + qty);
             } else {
-                prod.Stock__c -= oli.Quantity;
+                quantityPerProduct.put(productId, qty);
             }
         }
 
-        // 5️⃣ Mise à jour
+        // 5️⃣ Vérification stock
+        for(Id productId : quantityPerProduct.keySet()){
+
+            Product2 prod = productMap.get(productId);
+            if(prod == null) continue;
+
+            Decimal currentStock = prod.Stock__c == null ? 0 : prod.Stock__c;
+            Decimal requestedQty = quantityPerProduct.get(productId);
+
+            if(currentStock < requestedQty){
+
+                // Ajouter erreur sur toutes les lignes concernées
+                for(OpportunityLineItem oli : lineItems){
+                    PricebookEntry pbe = pbeMap.get(oli.PricebookEntryId);
+                    if(pbe != null && pbe.Product2Id == productId){
+                        oli.addError('Stock insuffisant pour ce produit.');
+                    }
+                }
+
+            } else {
+                prod.Stock__c = currentStock - requestedQty;
+            }
+        }
+
+        // 6️⃣ Update uniquement si aucune erreur
         if(!productMap.isEmpty()){
             update productMap.values();
         }

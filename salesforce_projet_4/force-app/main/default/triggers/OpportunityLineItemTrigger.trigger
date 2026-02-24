@@ -1,10 +1,7 @@
-trigger OpportunityLineItemTrigger
-on OpportunityLineItem (before insert, before update) {
+trigger OpportunityLineItemTrigger 
+on OpportunityLineItem (before insert) {
 
-    if(Trigger.isBefore){
-        OpportunityStockService.handleStock(
-            Trigger.new,
-            Trigger.oldMap
-        );
+    if(Trigger.isBefore && Trigger.isInsert){
+        OpportunityStockService.updateStock(Trigger.new);
     }
 }

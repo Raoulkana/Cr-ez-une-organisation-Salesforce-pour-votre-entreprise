@@ -1,5 +1,9 @@
-@isTest
+@IsTest
 public class OpportunityStockServiceTest {
+
+    private static Id oppId;
+    private static Id pbeId;
+    private static Id productId;
 
     @testSetup
     static void setupData() {
@@ -8,10 +12,10 @@ public class OpportunityStockServiceTest {
         Account acc = new Account(Name='Stock Account');
         insert acc;
 
-        // 2️⃣ Pricebook standard
+        // 2️⃣ Standard Pricebook
         Id standardPricebookId = Test.getStandardPricebookId();
 
-        // 3️⃣ Opportunity AVEC Pricebook
+        // 3️⃣ Opportunity
         Opportunity opp = new Opportunity(
             Name='Stock Opp',
             StageName='Prospecting',
@@ -20,14 +24,16 @@ public class OpportunityStockServiceTest {
             Pricebook2Id = standardPricebookId
         );
         insert opp;
+        oppId = opp.Id;
 
         // 4️⃣ Product avec stock
         Product2 prod = new Product2(
             Name='Stock Product',
             IsActive=true,
-            Stock__c = 10   // 🔥 important
+            Stock__c = 10
         );
         insert prod;
+        productId = prod.Id;
 
         // 5️⃣ PricebookEntry
         PricebookEntry pbe = new PricebookEntry(
@@ -37,14 +43,15 @@ public class OpportunityStockServiceTest {
             IsActive=true
         );
         insert pbe;
+        pbeId = pbe.Id;
     }
 
     // 🔴 TEST STOCK DÉPASSÉ
-    @isTest
+    @IsTest
     static void testQuantityExceeded() {
 
-        Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
-        PricebookEntry pbe = [SELECT Id FROM PricebookEntry LIMIT 1];
+        Opportunity opp = [SELECT Id FROM Opportunity WHERE Id = :oppId];
+        PricebookEntry pbe = [SELECT Id FROM PricebookEntry WHERE Id = :pbeId];
 
         Test.startTest();
 
@@ -58,7 +65,8 @@ public class OpportunityStockServiceTest {
             System.assert(false, 'Une erreur devait être levée.');
         } catch (DmlException e) {
             System.assert(
-                e.getMessage().contains('Stock insuffisant')
+                e.getMessage().contains('Stock insuffisant'),
+                'Le message attendu n’a pas été trouvé.'
             );
         }
 
@@ -66,11 +74,11 @@ public class OpportunityStockServiceTest {
     }
 
     // 🟢 TEST CAS VALIDE
-    @isTest
+    @IsTest
     static void testValidQuantity() {
 
-        Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
-        PricebookEntry pbe = [SELECT Id FROM PricebookEntry LIMIT 1];
+        Opportunity opp = [SELECT Id FROM Opportunity WHERE Id = :oppId];
+        PricebookEntry pbe = [SELECT Id FROM PricebookEntry WHERE Id = :pbeId];
 
         Test.startTest();
 
@@ -84,23 +92,23 @@ public class OpportunityStockServiceTest {
 
         Test.stopTest();
 
-        // Vérifie insertion
         System.assertNotEquals(null, oli.Id);
 
-        // Vérifie décrémentation stock
         Product2 updatedProd = [
-            SELECT Stock__c FROM Product2 LIMIT 1
+            SELECT Stock__c
+            FROM Product2
+            WHERE Id = :productId
         ];
 
         System.assertEquals(5, updatedProd.Stock__c);
     }
 
-    // 🟢 TEST BULK (IMPORTANT CERTIFICATION)
-    @isTest
+    // 🟢 TEST BULK (IMPORTANT)
+    @IsTest
     static void testBulkInsert() {
 
-        Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
-        PricebookEntry pbe = [SELECT Id FROM PricebookEntry LIMIT 1];
+        Opportunity opp = [SELECT Id FROM Opportunity WHERE Id = :oppId];
+        PricebookEntry pbe = [SELECT Id FROM PricebookEntry WHERE Id = :pbeId];
 
         List<OpportunityLineItem> olis = new List<OpportunityLineItem>();
 
@@ -118,11 +126,13 @@ public class OpportunityStockServiceTest {
         Test.stopTest();
 
         Product2 updatedProd = [
-            SELECT Stock__c FROM Product2 LIMIT 1
+            SELECT Stock__c
+            FROM Product2
+            WHERE Id = :productId
         ];
 
         // Stock initial = 10
-        // 2*2 = 4 vendus
+        // 2 lignes de 2 = 4 vendus
         System.assertEquals(6, updatedProd.Stock__c);
     }
 }
