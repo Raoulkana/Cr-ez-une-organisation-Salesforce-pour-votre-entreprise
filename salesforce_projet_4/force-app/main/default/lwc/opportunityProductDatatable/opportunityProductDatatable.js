@@ -146,6 +146,7 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
     =============================== */
 
     deleteProduct(productId) {
+        console.log('id produit '+productId);
 
         deleteOpportunityProduct({ productId: productId })
             .then(() => {
