@@ -1,7 +1,5 @@
 import { LightningElement, api, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
-import { RefreshEvent } from 'lightning/refresh';
-
 import getOpportunityProducts from '@salesforce/apex/OpportunityProductController.getOpportunityProducts';
 import deleteOpportunityProduct from '@salesforce/apex/OpportunityProductController.deleteOpportunityProduct';
 import isAdminOrCommercial from '@salesforce/apex/UserProfileController.isAdminOrCommercial';
@@ -153,14 +151,13 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
     /* ===============================
        SUPPRESSION
     =============================== */
-
     deleteProduct(productId) {
         console.log('row:', JSON.stringify(productId));
 
         deleteOpportunityProduct({ lineId: productId })
             .then(() => {
-                this.dispatchEvent(new RefreshEvent());
-                this.loadProducts();
+                // 🔄 Refresh complet de la page
+                window.location.reload();
             })
             .catch(error => {
                 console.error('Erreur suppression : ', error);
