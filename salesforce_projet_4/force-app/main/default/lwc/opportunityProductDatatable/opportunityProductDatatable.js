@@ -1,5 +1,6 @@
 import { LightningElement, api, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
+import { RefreshEvent } from 'lightning/refresh';
 
 import getOpportunityProducts from '@salesforce/apex/OpportunityProductController.getOpportunityProducts';
 import deleteOpportunityProduct from '@salesforce/apex/OpportunityProductController.deleteOpportunityProduct';
@@ -132,12 +133,20 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
         const actionName = event.detail.action.name;
         const row = event.detail.row;
 
+
+
         if (actionName === 'delete') {
+
+            if (!row.Id) {
+                console.error('Id produit undefined');
+                return;
+            }
+
             this.deleteProduct(row.Id);
         }
 
         if (actionName === 'view_product') {
-            this.navigateToProduct(row.productId);
+            this.navigateToProduct(row.Id);
         }
     }
 
@@ -146,10 +155,11 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
     =============================== */
 
     deleteProduct(productId) {
-        console.log('id produit '+productId);
+        console.log('row:', JSON.stringify(productId));
 
-        deleteOpportunityProduct({ productId: productId })
+        deleteOpportunityProduct({ lineId: productId })
             .then(() => {
+                this.dispatchEvent(new RefreshEvent());
                 this.loadProducts();
             })
             .catch(error => {

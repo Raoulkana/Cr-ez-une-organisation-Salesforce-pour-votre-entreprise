@@ -1,40 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
-
     <labels>
         <fullName>OL_Title</fullName>
-        <protected>false</protected>
-        <value>Produits de l'opportunité</value>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>OL_Title</shortDescription>
+        <value>Produits de l&apos;opportunité</value>
     </labels>
-
     <labels>
         <fullName>OL_No_Products</fullName>
-        <protected>false</protected>
-        <value>Aucun produit n’est associé à cette opportunité.</value>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>OL_No_Products</shortDescription>
+        <value>Aucun produit n’est associé à cette opportunité</value>
     </labels>
-
     <labels>
         <fullName>OL_Select_Pricebook</fullName>
-        <protected>false</protected>
-        <value>Veuillez sélectionner un catalogue puis ajouter des produits.</value>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>OL_Select_Pricebook</shortDescription>
+        <value>Veuillez sélectionner un catalogue puis ajouter des produits</value>
     </labels>
-
     <labels>
         <fullName>OL_Quantity_Error</fullName>
-        <protected>false</protected>
-        <value>Une ou plusieurs lignes ont une quantité invalide.</value>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>OL_Quantity_Error</shortDescription>
+        <value>Une ou plusieurs lignes ont une quantité invalide</value>
     </labels>
-
     <labels>
         <fullName>OL_Error_Title</fullName>
-        <protected>false</protected>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>OL_Error_Title</shortDescription>
         <value>Erreur</value>
     </labels>
-
     <labels>
         <fullName>OL_Not_Authorized</fullName>
-        <protected>false</protected>
-        <value>Vous n’êtes pas autorisé à voir ce contenu.</value>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>OL_Not_Authorized</shortDescription>
+        <value>Vous n’êtes pas autorisé à voir ce contenu</value>
     </labels>
-
+    <labels>
+        <fullName>Opportunity_Stock_Error</fullName>
+        <categories>Opportunity</categories>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Opportunity Stock Error</shortDescription>
+        <value>Votre opportunité ne peut pas être mise à jour car vous avez un souci de quantité sur vos lignes</value>
+    </labels>
 </CustomLabels>
