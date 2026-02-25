@@ -9,7 +9,11 @@ public with sharing class OpportunityProductController {
     Id opportunityId
   ) {
     if (opportunityId == null) {
-      throw new AuraHandledException('Opportunity Id is required');
+      AuraHandledException ex = new AuraHandledException(
+        'Opportunity Id is required'
+      );
+      ex.setMessage('Opportunity Id is required');
+      throw ex;
     }
 
     if (!Schema.sObjectType.OpportunityLineItem.isAccessible()) {
@@ -122,7 +126,11 @@ public with sharing class OpportunityProductController {
     }
 
     if (quantity <= 0) {
-      throw new AuraHandledException('Quantity must be greater than 0.');
+      AuraHandledException ex = new AuraHandledException(
+        'Quantity must be greater than 0.'
+      );
+      ex.setMessage('Quantity must be greater than 0.');
+      throw ex;
     }
 
     if (!Schema.sObjectType.OpportunityLineItem.isUpdateable()) {

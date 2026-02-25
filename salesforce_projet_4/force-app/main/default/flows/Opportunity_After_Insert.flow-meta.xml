@@ -6,34 +6,29 @@
     <label>Opportunity_After_Insert</label>
     <processMetadataValues>
         <name>BuilderType</name>
-        <value>
-            <stringValue>LightningFlowBuilder</stringValue>
-        </value>
+        <stringValue>LightningFlowBuilder</stringValue>
     </processMetadataValues>
     <processMetadataValues>
         <name>CanvasMode</name>
-        <value>
-            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
-        </value>
+        <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
     </processMetadataValues>
     <processMetadataValues>
         <name>OriginBuilderType</name>
-        <value>
-            <stringValue>LightningFlowBuilder</stringValue>
-        </value>
+        <stringValue>LightningFlowBuilder</stringValue>
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
-    <recordUpdates>
+    <recordUpdate>
         <description>Créée automatiquement par Flow</description>
         <name>Update_Opportunity</name>
         <label>Update Opportunity</label>
         <locationX>0</locationX>
         <locationY>0</locationY>
+        <inputReference>$Record</inputReference>
         <inputAssignments>
             <field>Description</field>
+            <stringValue>Créée automatiquement par Flow</stringValue>
         </inputAssignments>
-        <inputReference>$Record</inputReference>
-    </recordUpdates>
+    </recordUpdate>
     <start>
         <locationX>0</locationX>
         <locationY>0</locationY>

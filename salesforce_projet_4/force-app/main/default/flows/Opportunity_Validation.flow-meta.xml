@@ -22,21 +22,15 @@
     <label>Opportunity_Validation</label>
     <processMetadataValues>
         <name>BuilderType</name>
-        <value>
-            <stringValue>LightningFlowBuilder</stringValue>
-        </value>
+        <value>LightningFlowBuilder</value>
     </processMetadataValues>
     <processMetadataValues>
         <name>CanvasMode</name>
-        <value>
-            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
-        </value>
+        <value>AUTO_LAYOUT_CANVAS</value>
     </processMetadataValues>
     <processMetadataValues>
         <name>OriginBuilderType</name>
-        <value>
-            <stringValue>LightningFlowBuilder</stringValue>
-        </value>
+        <value>LightningFlowBuilder</value>
     </processMetadataValues>
     <processType>AutoLaunchedFlow</processType>
     <start>
