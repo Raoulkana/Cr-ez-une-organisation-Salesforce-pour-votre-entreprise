@@ -1,34 +1,33 @@
 public with sharing class UserProfileController {
+  @AuraEnabled(cacheable=true)
+  public static Boolean isAdminOrCommercial() {
+    Id profileId = UserInfo.getProfileId();
 
-    /**
-     * Vérifie si l'utilisateur courant
-     * est System Administrator ou Commercial
-     */
-    @AuraEnabled(cacheable=true)
-    public static Boolean isAdminOrCommercial() {
-
-        Id profileId = UserInfo.getProfileId();
-
-        // Vérifie l'accessibilité du profil
-        if(!Schema.sObjectType.Profile.isAccessible()){
-            throw new AuraHandledException('Accès au profil non autorisé.');
-        }
-
-        // Récupération du nom du profil
-        List<Profile> profiles = [
-            SELECT Name
-            FROM Profile
-            WHERE Id = :profileId
-            LIMIT 1
-        ];
-
-        if(profiles.isEmpty()){
-            throw new AuraHandledException('Profil introuvable.');
-        }
-
-        String profileName = profiles[0].Name.toLowerCase();
-
-        // Vérification des profils autorisés
-        return profileName.contains('system administrator') || profileName.contains('commercial');
+    if (!Schema.sObjectType.Profile.isAccessible()) {
+      AuraHandledException ex = new AuraHandledException(
+        'Accès au profil non autorisé.'
+      );
+      ex.setMessage('Accès au profil non autorisé.');
+      throw ex;
     }
+
+    Profile p = [
+      SELECT PermissionsModifyAllData, Name
+      FROM Profile
+      WHERE Id = :profileId
+      LIMIT 1
+    ];
+
+    // ✅ Admin via permission système
+    if (p.PermissionsModifyAllData) {
+      return true;
+    }
+
+    // ✅ Commercial si profil contient le mot
+    if (p.Name != null && p.Name.toLowerCase().contains('commercial')) {
+      return true;
+    }
+
+    return false;
+  }
 }

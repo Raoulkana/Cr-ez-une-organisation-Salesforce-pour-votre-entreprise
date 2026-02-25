@@ -16,7 +16,7 @@
         <name>OriginBuilderType</name>
         <stringValue>LightningFlowBuilder</stringValue>
     </processMetadataValues>
-    <processType>AutoLaunchedFlow</processType>
+    <processType>RecordTriggeredFlow</processType>
     <recordUpdate>
         <description>Créée automatiquement par Flow</description>
         <name>Update_Opportunity</name>
