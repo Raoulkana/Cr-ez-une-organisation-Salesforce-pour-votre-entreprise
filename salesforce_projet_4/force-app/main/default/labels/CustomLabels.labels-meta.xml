@@ -1,53 +1,133 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+
+    <!-- ===============================
+         TITRE & MESSAGES
+    =============================== -->
+
     <labels>
         <fullName>OL_Title</fullName>
         <language>en_US</language>
         <protected>true</protected>
-        <shortDescription>OL_Title</shortDescription>
-        <value>Produits de l&apos;opportunité</value>
+        <shortDescription>Opportunity Products Title</shortDescription>
+        <value>Produits de l'opportunité</value>
     </labels>
+
     <labels>
         <fullName>OL_No_Products</fullName>
         <language>en_US</language>
         <protected>true</protected>
-        <shortDescription>OL_No_Products</shortDescription>
+        <shortDescription>No products message</shortDescription>
         <value>Aucun produit n’est associé à cette opportunité</value>
     </labels>
+
     <labels>
         <fullName>OL_Select_Pricebook</fullName>
         <language>en_US</language>
         <protected>true</protected>
-        <shortDescription>OL_Select_Pricebook</shortDescription>
+        <shortDescription>Select pricebook message</shortDescription>
         <value>Veuillez sélectionner un catalogue puis ajouter des produits</value>
     </labels>
+
     <labels>
         <fullName>OL_Quantity_Error</fullName>
         <language>en_US</language>
         <protected>true</protected>
-        <shortDescription>OL_Quantity_Error</shortDescription>
-        <value>Une ou plusieurs lignes ont une quantité invalide</value>
+        <shortDescription>Quantity error message</shortDescription>
+        <value>Une ou plusieurs lignes ont une quantité supérieure au stock disponible</value>
     </labels>
+
     <labels>
         <fullName>OL_Error_Title</fullName>
         <language>en_US</language>
         <protected>true</protected>
-        <shortDescription>OL_Error_Title</shortDescription>
+        <shortDescription>Error title</shortDescription>
         <value>Erreur</value>
     </labels>
+
     <labels>
         <fullName>OL_Not_Authorized</fullName>
         <language>en_US</language>
         <protected>true</protected>
-        <shortDescription>OL_Not_Authorized</shortDescription>
+        <shortDescription>Unauthorized message</shortDescription>
         <value>Vous n’êtes pas autorisé à voir ce contenu</value>
     </labels>
+
+    <!-- ===============================
+         COLONNES DATATABLE
+    =============================== -->
+
+    <labels>
+        <fullName>OL_Product</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Product column</shortDescription>
+        <value>Produit</value>
+    </labels>
+
+    <labels>
+        <fullName>OL_Unit_Price</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Unit price column</shortDescription>
+        <value>Prix unitaire</value>
+    </labels>
+
+    <labels>
+        <fullName>OL_Total_Price</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Total price column</shortDescription>
+        <value>Prix total</value>
+    </labels>
+
+    <labels>
+        <fullName>OL_Quantity</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Quantity column</shortDescription>
+        <value>Quantité</value>
+    </labels>
+
+    <labels>
+        <fullName>OL_Stock</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Stock column</shortDescription>
+        <value>Quantité restante</value>
+    </labels>
+
+    <!-- ===============================
+         BOUTONS
+    =============================== -->
+
+    <labels>
+        <fullName>OL_Delete</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>Delete button</shortDescription>
+        <value>Supprimer</value>
+    </labels>
+
+    <labels>
+        <fullName>OL_View_Product</fullName>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>View product button</shortDescription>
+        <value>Voir produit</value>
+    </labels>
+
+    <!-- ===============================
+         FLOW / VALIDATION
+    =============================== -->
+
     <labels>
         <fullName>Opportunity_Stock_Error</fullName>
         <categories>Opportunity</categories>
         <language>en_US</language>
         <protected>true</protected>
-        <shortDescription>Opportunity Stock Error</shortDescription>
+        <shortDescription>Opportunity stock error</shortDescription>
         <value>Votre opportunité ne peut pas être mise à jour car vous avez un souci de quantité sur vos lignes</value>
     </labels>
+
 </CustomLabels>

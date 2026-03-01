@@ -1,11 +1,17 @@
 <template>
 
-    <!-- Utilisateur autorisé -->
     <template if:true={showContent}>
 
         <lightning-card title={labels.OL_Title}>
 
-            <!-- Encadré erreur quantité -->
+            <!-- Spinner -->
+            <template if:true={isLoading}>
+                <div class="slds-p-around_medium slds-align_absolute-center">
+                    <lightning-spinner alternative-text="Chargement"></lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Erreur quantité -->
             <template if:true={hasQuantityError}>
                 <div class="error-box">
                     <p class="error-title">{labels.OL_Error_Title}</p>
@@ -13,7 +19,7 @@
                 </div>
             </template>
 
-            <!-- Produits existants -->
+            <!-- Datatable -->
             <template if:true={hasData}>
                 <lightning-datatable
                     key-field="Id"
@@ -25,7 +31,7 @@
             </template>
 
             <!-- Aucun produit -->
-            <template if:false={hasData}>
+            <template if:true={showNoProducts}>
                 <div class="no-products">
                     <p><strong>{labels.OL_No_Products}</strong></p>
                     <p>{labels.OL_Select_Pricebook}</p>
@@ -36,7 +42,7 @@
 
     </template>
 
-    <!-- Utilisateur non autorisé -->
+    <!-- Non autorisé -->
     <template if:false={showContent}>
         <lightning-card title={labels.OL_Title}>
             <div class="slds-p-around_medium">

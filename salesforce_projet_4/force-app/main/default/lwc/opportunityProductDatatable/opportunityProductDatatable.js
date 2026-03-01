@@ -1,14 +1,29 @@
 import { LightningElement, api, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+
 import getOpportunityProducts from '@salesforce/apex/OpportunityProductController.getOpportunityProducts';
 import deleteOpportunityProduct from '@salesforce/apex/OpportunityProductController.deleteOpportunityProduct';
 import isAdminOrCommercial from '@salesforce/apex/UserProfileController.isAdminOrCommercial';
+
+/* ===============================
+   CUSTOM LABELS
+=============================== */
 
 import OL_Title from '@salesforce/label/c.OL_Title';
 import OL_No_Products from '@salesforce/label/c.OL_No_Products';
 import OL_Quantity_Error from '@salesforce/label/c.OL_Quantity_Error';
 import OL_Error_Title from '@salesforce/label/c.OL_Error_Title';
 import OL_Not_Authorized from '@salesforce/label/c.OL_Not_Authorized';
+
+import OL_Product from '@salesforce/label/c.OL_Product';
+import OL_Unit_Price from '@salesforce/label/c.OL_Unit_Price';
+import OL_Total_Price from '@salesforce/label/c.OL_Total_Price';
+import OL_Quantity from '@salesforce/label/c.OL_Quantity';
+import OL_Stock from '@salesforce/label/c.OL_Stock';
+import OL_Delete from '@salesforce/label/c.OL_Delete';
+import OL_View_Product from '@salesforce/label/c.OL_View_Product';
+import OL_Select_Pricebook from '@salesforce/label/c.OL_Select_Pricebook';
 
 export default class OpportunityProductDatatable extends NavigationMixin(LightningElement) {
 
@@ -18,13 +33,21 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
     @track showContent = false;
     @track hasData = false;
     @track hasQuantityError = false;
+    @track isLoading = true;
+
+    isAuthorizedProfile = false;
+
+    get showNoProducts() {
+        return !this.hasData && !this.isLoading;
+    }
 
     labels = {
         OL_Title,
         OL_No_Products,
         OL_Quantity_Error,
         OL_Error_Title,
-        OL_Not_Authorized
+        OL_Not_Authorized,
+        OL_Select_Pricebook
     };
 
     columns = [];
@@ -41,48 +64,100 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
         try {
             const result = await isAdminOrCommercial();
             this.showContent = result;
+            this.isAuthorizedProfile = result;
 
             if (result) {
                 this.initializeColumns();
                 this.loadProducts();
+            } else {
+                this.showToast(
+                    this.labels.OL_Error_Title,
+                    this.labels.OL_Not_Authorized,
+                    'error'
+                );
             }
 
         } catch (error) {
-            console.error('Erreur vérification profil : ', error);
             this.showContent = false;
+            this.showToast(
+                this.labels.OL_Error_Title,
+                error?.body?.message || 'Erreur profil',
+                'error'
+            );
         }
     }
 
     initializeColumns() {
-        this.columns = [
-            { label: 'Produit', fieldName: 'productName' },
-            { label: 'Prix unitaire', fieldName: 'unitPrice', type: 'currency' },
-            { label: 'Prix total', fieldName: 'totalPrice', type: 'currency' },
-            { label: 'Quantité', fieldName: 'quantity', type: 'number' },
-            { label: 'Quantité restante', fieldName: 'quantityInStock', type: 'number' },
 
+        const baseColumns = [
             {
-                type: 'button-icon',
-                fixedWidth: 50,
-                typeAttributes: {
-                    iconName: 'utility:delete',
-                    name: 'delete',
-                    title: 'Supprimer',
-                    variant: 'bare',
-                    alternativeText: 'Supprimer'
+                label: OL_Product,
+                fieldName: 'productName',
+                cellAttributes: {
+                    class: { fieldName: 'rowClass' }
                 }
             },
-
             {
-                type: 'button',
-                typeAttributes: {
-                    label: 'Voir produit',
-                    name: 'view_product',
-                    iconName: 'utility:preview',
-                    variant: 'base'
+                label: OL_Unit_Price,
+                fieldName: 'unitPrice',
+                type: 'currency',
+                cellAttributes: {
+                    class: { fieldName: 'rowClass' }
+                }
+            },
+            {
+                label: OL_Total_Price,
+                fieldName: 'totalPrice',
+                type: 'currency',
+                cellAttributes: {
+                    class: { fieldName: 'rowClass' }
+                }
+            },
+            {
+                label: OL_Quantity,
+                fieldName: 'quantity',
+                type: 'number',
+                cellAttributes: {
+                    class: { fieldName: 'rowClass' }
+                }
+            },
+            {
+                label: OL_Stock,
+                fieldName: 'quantityInStock',
+                type: 'number',
+                cellAttributes: {
+                    class: { fieldName: 'rowClass' }
                 }
             }
         ];
+
+        const actionColumns = [];
+
+        // Bouton suppression (admin & commercial)
+        actionColumns.push({
+            type: 'button-icon',
+            fixedWidth: 50,
+            typeAttributes: {
+                iconName: 'utility:delete',
+                name: 'delete',
+                title: OL_Delete,
+                variant: 'bare',
+                alternativeText: OL_Delete
+            }
+        });
+
+        // Bouton Voir produit
+        actionColumns.push({
+            type: 'button',
+            typeAttributes: {
+                label: OL_View_Product,
+                name: 'view_product',
+                iconName: 'utility:preview',
+                variant: 'base'
+            }
+        });
+
+        this.columns = [...baseColumns, ...actionColumns];
     }
 
     /* ===============================
@@ -94,21 +169,34 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
             .then(result => {
 
                 this.data = result.map(item => {
+
+                    const isError =
+                        item.quantity > item.quantityInStock;
+
                     return {
                         ...item,
                         productName: item.PricebookEntry?.Product2?.Name,
-                        productId: item.PricebookEntry?.Product2?.Id
+                        productId: item.PricebookEntry?.Product2?.Id,
+                        isError: isError,
+                        rowClass: isError ? 'error-row' : ''
                     };
                 });
 
                 this.hasData = this.data.length > 0;
-                this.checkQuantityErrors();
 
+                this.checkQuantityErrors();
+                this.isLoading = false;
             })
             .catch(error => {
-                console.error('Erreur chargement produits : ', error);
                 this.data = [];
                 this.hasData = false;
+                this.isLoading = false;
+
+                this.showToast(
+                    this.labels.OL_Error_Title,
+                    error?.body?.message || 'Erreur chargement produits',
+                    'error'
+                );
             });
     }
 
@@ -117,9 +205,18 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
     =============================== */
 
     checkQuantityErrors() {
+
         this.hasQuantityError = this.data.some(
-            item => item.quantity <= 0
+            item => item.quantity > item.quantityInStock
         );
+
+        if (this.hasQuantityError) {
+            this.showToast(
+                this.labels.OL_Error_Title,
+                this.labels.OL_Quantity_Error,
+                'warning'
+            );
+        }
     }
 
     /* ===============================
@@ -131,12 +228,14 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
         const actionName = event.detail.action.name;
         const row = event.detail.row;
 
-
-
         if (actionName === 'delete') {
 
             if (!row.Id) {
-                console.error('Id produit undefined');
+                this.showToast(
+                    this.labels.OL_Error_Title,
+                    'Id produit invalide',
+                    'error'
+                );
                 return;
             }
 
@@ -144,23 +243,34 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
         }
 
         if (actionName === 'view_product') {
-            this.navigateToProduct(row.Id);
+            this.navigateToProduct(row.productId); // ✅ correction
         }
     }
 
     /* ===============================
        SUPPRESSION
     =============================== */
-    deleteProduct(productId) {
-        console.log('row:', JSON.stringify(productId));
 
-        deleteOpportunityProduct({ lineId: productId })
+    deleteProduct(lineId) {
+
+        deleteOpportunityProduct({ lineId: lineId })
             .then(() => {
-                // 🔄 Refresh complet de la page
-                window.location.reload();
+
+                this.showToast(
+                    'Succès',
+                    'Produit supprimé avec succès',
+                    'success'
+                );
+
+                this.loadProducts(); // 🔄 refresh propre
             })
             .catch(error => {
-                console.error('Erreur suppression : ', error);
+
+                this.showToast(
+                    this.labels.OL_Error_Title,
+                    error?.body?.message || 'Erreur suppression',
+                    'error'
+                );
             });
     }
 
@@ -180,5 +290,19 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
                 actionName: 'view'
             }
         });
+    }
+
+    /* ===============================
+       TOAST UTILITY
+    =============================== */
+
+    showToast(title, message, variant) {
+        this.dispatchEvent(
+            new ShowToastEvent({
+                title: title,
+                message: message,
+                variant: variant
+            })
+        );
     }
 }
