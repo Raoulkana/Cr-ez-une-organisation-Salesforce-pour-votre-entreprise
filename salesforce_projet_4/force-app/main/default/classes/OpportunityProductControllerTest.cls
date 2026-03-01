@@ -16,7 +16,7 @@ public class OpportunityProductControllerTest {
         );
         insert opp;
 
-        // 🔥 CORRIGÉ : champ de stock correct
+        // 🔥 Champ de stock correct
         Product2 prod = new Product2(
             Name = 'Produit Test',
             IsActive = true,
@@ -43,11 +43,9 @@ public class OpportunityProductControllerTest {
         return oli;
     }
 
-    /*
-     * ==========================================
-     * TEST READ
-     * ==========================================
-     */
+    // ==========================================
+    // TEST READ
+    // ==========================================
     @IsTest
     static void testGetOpportunityProducts() {
         OpportunityLineItem oli = createTestData();
@@ -62,15 +60,13 @@ public class OpportunityProductControllerTest {
         System.assertEquals(2, result[0].quantity);
         System.assertEquals(100, result[0].unitPrice);
         System.assertEquals(200, result[0].totalPrice);
-        System.assertEquals(100, result[0].quantityInStock); // 🔥 vérification du stock
+        System.assertEquals(100, result[0].quantityInStock); // vérification stock
         System.assertNotEquals(null, result[0].productId);
     }
 
-    /*
-     * ==========================================
-     * TEST CREATE
-     * ==========================================
-     */
+    // ==========================================
+    // TEST CREATE
+    // ==========================================
     @IsTest
     static void testCreateOpportunityProduct() {
         OpportunityLineItem existing = createTestData();
@@ -92,11 +88,9 @@ public class OpportunityProductControllerTest {
         System.assertEquals(3, newLine.Quantity);
     }
 
-    /*
-     * ==========================================
-     * TEST UPDATE
-     * ==========================================
-     */
+    // ==========================================
+    // TEST UPDATE
+    // ==========================================
     @IsTest
     static void testUpdateQuantity() {
         OpportunityLineItem oli = createTestData();
@@ -114,11 +108,9 @@ public class OpportunityProductControllerTest {
         System.assertEquals(5, updated.Quantity);
     }
 
-    /*
-     * ==========================================
-     * TEST DELETE
-     * ==========================================
-     */
+    // ==========================================
+    // TEST DELETE
+    // ==========================================
     @IsTest
     static void testDeleteOpportunityProduct() {
         OpportunityLineItem oli = createTestData();
@@ -136,11 +128,9 @@ public class OpportunityProductControllerTest {
         System.assertEquals(0, countLines);
     }
 
-    /*
-     * ==========================================
-     * TEST ERREUR - Id null
-     * ==========================================
-     */
+    // ==========================================
+    // TEST ERREUR - Id null
+    // ==========================================
     @IsTest
     static void testGetOpportunityProductsWithNullId() {
         try {
@@ -151,11 +141,9 @@ public class OpportunityProductControllerTest {
         }
     }
 
-    /*
-     * ==========================================
-     * TEST ERREUR - Quantité invalide
-     * ==========================================
-     */
+    // ==========================================
+    // TEST ERREUR - Quantité invalide
+    // ==========================================
     @IsTest
     static void testUpdateWithInvalidQuantity() {
         OpportunityLineItem oli = createTestData();

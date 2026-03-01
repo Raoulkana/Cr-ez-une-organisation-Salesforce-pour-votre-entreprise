@@ -16,37 +16,48 @@ public with sharing class OpportunityProductController {
             throw new AuraHandledException('Access denied.');
         }
 
+        // 1️⃣ Récupérer les OpportunityLineItem
         List<OpportunityLineItem> lines = [
-            SELECT
-                Id,
-                Quantity,
-                UnitPrice,
-                TotalPrice,
-                PricebookEntryId,
-                PricebookEntry.Product2.Id,
-                PricebookEntry.Product2.Name,
-                PricebookEntry.Product2.QuantityInStock__c
+            SELECT Id, Quantity, UnitPrice, TotalPrice, PricebookEntryId
             FROM OpportunityLineItem
             WHERE OpportunityId = :opportunityId
         ];
 
-        List<OpportunityLineWrapper> results = new List<OpportunityLineWrapper>();
+        if (lines.isEmpty()) return new List<OpportunityLineWrapper>();
 
+        // 2️⃣ Récupérer PricebookEntry + Product2
+        Set<Id> pbeIds = new Set<Id>();
         for (OpportunityLineItem oli : lines) {
-            results.add(new OpportunityLineWrapper(oli));
+            pbeIds.add(oli.PricebookEntryId);
+        }
+
+        Map<Id, PricebookEntry> pbeMap = new Map<Id, PricebookEntry>(
+            [SELECT Id, Product2Id, Product2.Name, Product2.QuantityInStock__c
+             FROM PricebookEntry
+             WHERE Id IN :pbeIds]
+        );
+
+        // 3️⃣ Construire les wrappers
+        List<OpportunityLineWrapper> results = new List<OpportunityLineWrapper>();
+        for (OpportunityLineItem oli : lines) {
+            PricebookEntry pbe = pbeMap.get(oli.PricebookEntryId);
+
+            Id productId = pbe?.Product2Id;
+            String productName = pbe?.Product2?.Name;
+            Decimal quantityInStock = pbe?.Product2?.QuantityInStock__c;
+
+            results.add(new OpportunityLineWrapper(
+                oli.Id, oli.Quantity, oli.UnitPrice, oli.TotalPrice,
+                productId, productName, quantityInStock
+            ));
         }
 
         return results;
     }
 
-    /*
-     * ===============================
-     * DELETE
-     * ===============================
-     */
+    // === DELETE
     @AuraEnabled
     public static void deleteOpportunityProduct(Id lineId) {
-
         if (lineId == null) {
             throw new AuraHandledException('Line Id is required');
         }
@@ -55,51 +66,25 @@ public with sharing class OpportunityProductController {
             throw new AuraHandledException('Delete not allowed.');
         }
 
-        List<OpportunityLineItem> lines = [
-            SELECT Id
-            FROM OpportunityLineItem
-            WHERE Id = :lineId
-            LIMIT 1
+        OpportunityLineItem oli = [
+            SELECT Id FROM OpportunityLineItem WHERE Id = :lineId LIMIT 1
         ];
 
-        if (lines.isEmpty()) {
-            throw new AuraHandledException('Line not found.');
-        }
-
-        delete lines[0];
+        delete oli;
     }
 
-    /*
-     * ===============================
-     * CREATE
-     * ===============================
-     */
+    // === CREATE
     @AuraEnabled
-    public static Id createOpportunityProduct(
-        Id opportunityId,
-        Id pricebookEntryId,
-        Decimal quantity
-    ) {
-
+    public static Id createOpportunityProduct(Id opportunityId, Id pricebookEntryId, Decimal quantity) {
         if (opportunityId == null || pricebookEntryId == null || quantity == null) {
             throw new AuraHandledException('Missing required fields.');
         }
-
         if (quantity <= 0) {
             throw new AuraHandledException('Quantity must be greater than 0.');
         }
-
-        if (!Schema.sObjectType.OpportunityLineItem.isCreateable()) {
-            throw new AuraHandledException('Create not allowed.');
-        }
-
         PricebookEntry pbe = [
-            SELECT Id, UnitPrice, IsActive
-            FROM PricebookEntry
-            WHERE Id = :pricebookEntryId
-            LIMIT 1
+            SELECT Id, UnitPrice, IsActive FROM PricebookEntry WHERE Id = :pricebookEntryId LIMIT 1
         ];
-
         if (!pbe.IsActive) {
             throw new AuraHandledException('Pricebook entry is not active.');
         }
@@ -110,82 +95,48 @@ public with sharing class OpportunityProductController {
             Quantity = quantity,
             UnitPrice = pbe.UnitPrice
         );
-
         insert oli;
-
         return oli.Id;
     }
 
-    /*
-     * ===============================
-     * UPDATE
-     * ===============================
-     */
+    // === UPDATE
     @AuraEnabled
     public static void updateQuantity(Id lineId, Decimal quantity) {
-
         if (lineId == null || quantity == null) {
             throw new AuraHandledException('Missing required fields.');
         }
-
         if (quantity <= 0) {
             throw new AuraHandledException('Quantity must be greater than 0.');
         }
 
-        if (!Schema.sObjectType.OpportunityLineItem.isUpdateable()) {
-            throw new AuraHandledException('Update not allowed.');
-        }
-
-        List<OpportunityLineItem> lines = [
-            SELECT Id, Quantity
-            FROM OpportunityLineItem
-            WHERE Id = :lineId
-            LIMIT 1
+        OpportunityLineItem oli = [
+            SELECT Id, Quantity FROM OpportunityLineItem WHERE Id = :lineId LIMIT 1
         ];
-
-        if (lines.isEmpty()) {
-            throw new AuraHandledException('Line not found.');
-        }
-
-        OpportunityLineItem oli = lines[0];
         oli.Quantity = quantity;
         update oli;
     }
 
-    /*
-     * ===============================
-     * WRAPPER
-     * ===============================
-     */
+    // === WRAPPER
     public class OpportunityLineWrapper {
-
         @AuraEnabled public Id Id;
         @AuraEnabled public String productName;
         @AuraEnabled public Id productId;
         @AuraEnabled public Decimal quantity;
         @AuraEnabled public Decimal unitPrice;
         @AuraEnabled public Decimal totalPrice;
-
-        // 🔥 NOUVEAU CHAMP OBLIGATOIRE
         @AuraEnabled public Decimal quantityInStock;
 
-        public OpportunityLineWrapper(OpportunityLineItem oli) {
-
-            this.Id = oli.Id;
-            this.quantity = oli.Quantity;
-            this.unitPrice = oli.UnitPrice;
-            this.totalPrice = oli.TotalPrice;
-
-            if (oli.PricebookEntry != null &&
-                oli.PricebookEntry.Product2 != null) {
-
-                this.productName = oli.PricebookEntry.Product2.Name;
-                this.productId = oli.PricebookEntry.Product2.Id;
-
-                // 🔥 IMPORTANT : stock exposé au LWC
-                this.quantityInStock =
-                    oli.PricebookEntry.Product2.QuantityInStock__c;
-            }
+        public OpportunityLineWrapper(
+            Id Id, Decimal quantity, Decimal unitPrice, Decimal totalPrice,
+            Id productId, String productName, Decimal quantityInStock
+        ) {
+            this.Id = Id;
+            this.quantity = quantity;
+            this.unitPrice = unitPrice;
+            this.totalPrice = totalPrice;
+            this.productId = productId;
+            this.productName = productName;
+            this.quantityInStock = quantityInStock;
         }
     }
 }
