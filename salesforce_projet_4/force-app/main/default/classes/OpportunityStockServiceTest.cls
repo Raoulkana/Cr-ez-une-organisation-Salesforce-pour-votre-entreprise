@@ -15,7 +15,7 @@ public class OpportunityStockServiceTest {
         Product2 prod = new Product2(
             Name='Stock Product',
             IsActive=true,
-            Stock__c = 10
+            QuantityInStock__c = 10 // 🔥 corrigé
         );
         insert prod;
 
@@ -44,26 +44,35 @@ public class OpportunityStockServiceTest {
     static void testQuantityExceeded() {
 
         Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
-        PricebookEntry pbe = [SELECT Id FROM PricebookEntry LIMIT 1];
+        PricebookEntry pbe = [SELECT Id, Product2Id FROM PricebookEntry LIMIT 1];
+
+        OpportunityLineItem oli = new OpportunityLineItem(
+            OpportunityId=opp.Id,
+            Quantity=200, // > QuantityInStock__c = 10
+            UnitPrice=50,
+            PricebookEntryId=pbe.Id
+        );
 
         Test.startTest();
-
         try {
-            insert new OpportunityLineItem(
-                OpportunityId=opp.Id,
-                Quantity=200, // > Stock__c = 10
-                UnitPrice=50,
-                PricebookEntryId=pbe.Id
-            );
+            // Appel manuel du service pour vérifier le stock
+            OpportunityStockService.updateStock(new List<OpportunityLineItem>{oli});
+
+            // Si pas d'erreur, on insert normalement
+            insert oli;
+
             System.assert(false, 'Une erreur devait être levée.');
         } catch (DmlException e) {
-
+            System.assert(
+                e.getMessage().contains('Stock insuffisant'),
+                'Message inattendu : ' + e.getMessage()
+            );
+        } catch (AuraHandledException e) {
             System.assert(
                 e.getMessage().contains('Stock insuffisant'),
                 'Message inattendu : ' + e.getMessage()
             );
         }
-
         Test.stopTest();
     }
 
@@ -72,10 +81,8 @@ public class OpportunityStockServiceTest {
     static void testValidQuantity() {
 
         Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
-        PricebookEntry pbe = [SELECT Id FROM PricebookEntry LIMIT 1];
-        Product2 prod = [SELECT Id, Stock__c FROM Product2 LIMIT 1];
-
-        Test.startTest();
+        PricebookEntry pbe = [SELECT Id, Product2Id FROM PricebookEntry LIMIT 1];
+        Product2 prod = [SELECT Id, QuantityInStock__c FROM Product2 LIMIT 1];
 
         OpportunityLineItem oli = new OpportunityLineItem(
             OpportunityId=opp.Id,
@@ -83,18 +90,22 @@ public class OpportunityStockServiceTest {
             UnitPrice=50,
             PricebookEntryId=pbe.Id
         );
-        insert oli;
 
+        Test.startTest();
+        // Appel du service pour mise à jour du stock
+        OpportunityStockService.updateStock(new List<OpportunityLineItem>{oli});
+
+        insert oli; // OK, stock suffisant
         Test.stopTest();
 
         Product2 updatedProd = [
-            SELECT Stock__c
+            SELECT QuantityInStock__c
             FROM Product2
             WHERE Id = :prod.Id
         ];
 
         // Stock initial = 10, vendu = 5 → reste = 5
-        System.assertEquals(5, updatedProd.Stock__c);
+        System.assertEquals(5, updatedProd.QuantityInStock__c);
     }
 
     // 🟢 TEST BULK
@@ -102,8 +113,8 @@ public class OpportunityStockServiceTest {
     static void testBulkInsert() {
 
         Opportunity opp = [SELECT Id FROM Opportunity LIMIT 1];
-        PricebookEntry pbe = [SELECT Id FROM PricebookEntry LIMIT 1];
-        Product2 prod = [SELECT Id FROM Product2 LIMIT 1];
+        PricebookEntry pbe = [SELECT Id, Product2Id FROM PricebookEntry LIMIT 1];
+        Product2 prod = [SELECT Id, QuantityInStock__c FROM Product2 LIMIT 1];
 
         List<OpportunityLineItem> olis = new List<OpportunityLineItem>();
 
@@ -117,17 +128,19 @@ public class OpportunityStockServiceTest {
         }
 
         Test.startTest();
-        insert olis;
+        // Mise à jour du stock avant insert
+        OpportunityStockService.updateStock(olis);
+        insert olis; // OK, stock suffisant
         Test.stopTest();
 
         Product2 updatedProd = [
-            SELECT Stock__c
+            SELECT QuantityInStock__c
             FROM Product2
             WHERE Id = :prod.Id
         ];
 
         // Stock initial = 10
         // 2 lignes de 2 = 4 vendus → reste = 6
-        System.assertEquals(6, updatedProd.Stock__c);
+        System.assertEquals(6, updatedProd.QuantityInStock__c);
     }
 }
