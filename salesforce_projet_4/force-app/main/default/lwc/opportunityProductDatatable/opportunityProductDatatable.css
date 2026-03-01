@@ -1,23 +1,32 @@
+/* Boîte d'erreur générale */
 .error-box {
-    background-color: #ffe0b2;
-    border-left: 6px solid red;
+    background-color: #ffe0b2;   /* fond orange clair */
+    border-left: 6px solid red;  /* bande rouge à gauche */
     padding: 12px;
     margin-bottom: 12px;
 }
 
+/* Titre des messages d'erreur */
 .error-title {
     font-weight: bold;
     color: red;
 }
 
+/* Lignes de datatable en erreur */
 .error-row {
-    background-color: #f2f2f2;
-    color: red;
-    font-weight: 600;
+    background-color: #f2f2f2;  /* gris clair pour toute la ligne */
+    color: red;                  /* texte rouge */
+    font-weight: bold;           /* texte plus visible */
 }
 
+/* Ligne au survol pour meilleure lisibilité (optionnel) */
+.error-row:hover {
+    background-color: #e0e0e0;  /* gris légèrement plus clair au survol */
+}
+
+/* Message affiché lorsqu'il n'y a pas de produits */
 .no-products {
-    background-color: #f4f6f9;
+    background-color: #f4f6f9; /* gris très clair */
     padding: 12px;
     text-align: center;
 }
