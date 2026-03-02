@@ -33,8 +33,7 @@ public class UserProfileControllerTest {
                 'Un System Administrator doit être autorisé.');
         }
 
-        // 🔹 PROFIL COMMERCIAL (sécurisé)
-        Profile commercialProfile;
+        // 🔹 PROFIL COMMERCIAL (maintenant NON autorisé)
         List<Profile> commercialProfiles = [
             SELECT Id 
             FROM Profile 
@@ -43,7 +42,6 @@ public class UserProfileControllerTest {
         ];
 
         if (!commercialProfiles.isEmpty()) {
-            commercialProfile = commercialProfiles[0];
 
             User commercialUser = new User(
                 FirstName = 'Commercial',
@@ -55,15 +53,15 @@ public class UserProfileControllerTest {
                 TimeZoneSidKey = 'Europe/Paris',
                 LocaleSidKey = 'en_US',
                 EmailEncodingKey = 'UTF-8',
-                ProfileId = commercialProfile.Id,
+                ProfileId = commercialProfiles[0].Id,
                 LanguageLocaleKey = 'en_US'
             );
             insert commercialUser;
 
             System.runAs(commercialUser) {
                 Boolean result = UserProfileController.isAdminOrCommercial();
-                System.assertEquals(true, result,
-                    'Un profil Commercial doit être autorisé.');
+                System.assertEquals(false, result,
+                    'Un profil Commercial ne doit pas être autorisé.');
             }
         }
 

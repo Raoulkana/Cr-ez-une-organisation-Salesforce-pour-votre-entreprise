@@ -57,19 +57,14 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
     async initializeComponent() {
         try {
             const result = await isAdminOrCommercial();
-            this.showContent = result;
+
+            // result = true uniquement si Admin
             this.isAuthorizedProfile = result;
 
-            if (result) {
-                this.initializeColumns();
-                this.loadProducts();
-            } else {
-                this.showToast(
-                    this.labels.OL_Error_Title,
-                    this.labels.OL_Not_Authorized,
-                    'error'
-                );
-            }
+            this.showContent = true; // Tout le monde voit les produits
+
+            this.initializeColumns();
+            this.loadProducts();
 
         } catch (error) {
             this.showContent = false;
@@ -115,8 +110,9 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
             }
         ];
 
-        const actionColumns = [
-            // Supprimer
+        // Colonnes actions (Admin uniquement)
+        const actionColumns = this.isAuthorizedProfile ? [
+            //suppression
             {
                 type: 'button-icon',
                 fixedWidth: 50,
@@ -128,7 +124,7 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
                     alternativeText: OL_Delete
                 }
             },
-            // Voir produit
+            //voir produit
             {
                 type: 'button',
                 typeAttributes: {
@@ -138,7 +134,7 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
                     variant: 'base'
                 }
             }
-        ];
+        ] : [];
 
         this.columns = [...baseColumns, ...actionColumns];
     }
@@ -190,6 +186,17 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
        ACTIONS DATATABLE
     =============================== */
     handleRowAction(event) {
+
+        // Sécurité supplémentaire
+        if (!this.isAuthorizedProfile) {
+            this.showToast(
+                this.labels.OL_Error_Title,
+                this.labels.OL_Not_Authorized,
+                'error'
+            );
+            return;
+        }
+
         const actionName = event.detail.action.name;
         const row = event.detail.row;
 
@@ -202,7 +209,7 @@ export default class OpportunityProductDatatable extends NavigationMixin(Lightni
         }
 
         if (actionName === 'view_product') {
-            this.navigateToProduct(row.productId); // ✅ fonctionne maintenant
+            this.navigateToProduct(row.productId);
         }
     }
 
